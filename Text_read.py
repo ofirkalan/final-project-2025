@@ -12,6 +12,3 @@ df_cleaned = df.drop(columns=columns_to_drop, errors='ignore')
 print("final shape", df_cleaned.shape)
 print("\n first 5 lines :")
 print(df_cleaned.head())
-
-# עכשיו המשתנה df_cleaned הוא ה-DataFrame שלך שאיתו אפשר לצייר גרפים
-# לדוגמה: df_cleaned['Age'].hist()
