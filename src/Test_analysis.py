@@ -19,7 +19,7 @@ class TestAlzheimersProject(unittest.TestCase):
         We create a fake DataFrame that looks exactly like the real data,
         so we can test the functions without needing the real CSV file.
         """
-        # יצירת דאטה מזויף עם כל העמודות שהקוד שלנו צריך
+#creating fake data 
         self.data = pd.DataFrame({
             'Age': [60, 70, 80, 65, 75, 85, 62, 72, 82, 68],
             'Hypertension': [0, 1, 0, 1, 0, 1, 0, 1, 0, 1],
@@ -38,10 +38,10 @@ class TestAlzheimersProject(unittest.TestCase):
         """
         Test that new features (CardioRisk, AgeGroup, One-Hot Ethnicity) are created correctly.
         """
-        # Act: מריצים את הפונקציה
+        # Act: activating the function
         df_eng = perform_feature_engineering(self.data)
         
-        # Assert: בדיקות
+        # Assert: checking
         # 1. Check if 'CardioRiskScore' was created
         self.assertIn('CardioRiskScore', df_eng.columns)
         # Check calculation: row 1 (index 1): Hyp(1) + Dia(0) + Smo(1) = 2
@@ -125,7 +125,6 @@ class TestAlzheimersProject(unittest.TestCase):
         """
         # Setup
         df_eng = perform_feature_engineering(self.data)
-        # שים לב: השורה הבאה חייבת להיות בקו ישר עם השורה שמעליה
         X_train, X_test, y_train, y_test = preprocess_data(df_eng)
         model = train_random_forest(X_train, y_train)
         

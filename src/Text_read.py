@@ -1,16 +1,14 @@
-import pandas as pd
-
 # make sure the file is in the same folder with this model
 import pandas as pd
-import os  # 
+import os  # Operating System
 
-# קבלת הנתיב המדויק של התיקייה שבה הקוד נמצא
+# the exact path of the file
 script_dir = os.path.dirname(os.path.abspath(__file__))
 
-# חיבור הנתיב עם שם הקובץ
+# finding the path throw the file name
 file_path = os.path.join(script_dir, 'alzheimers_disease_data.csv')
 
-# טעינת הקובץ (עכשיו זה יעבוד מכל מקום)
+# load the file by Data Frame
 df = pd.read_csv(file_path)
 
 # i deleted 2 parametrs the id of the patients and the tecnical information that doesnt really relevant for us
