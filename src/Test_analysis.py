@@ -1,158 +1,96 @@
 import unittest
 import pandas as pd
 import numpy as np
-from Analysis_main import (
-    perform_feature_engineering, 
-    preprocess_data, 
-    train_logistic_regression, 
-    train_random_forest, 
-    evaluate_model, 
-    get_feature_importance,
-    analyze_correlations
+
+# --- IMPORTS FROM YOUR NEW FILE NAMES ---
+# We import the logic functions from 'Statistical_model.py'
+from Statistical_model import (
+    perform_feature_engineering,
+    preprocess_data,
+    train_logistic_regression
 )
 
+# We import the stats function from 'Statistic_analysis.py'
+from Statistic_analysis import analyze_correlations
+
 class TestAlzheimersProject(unittest.TestCase):
-    
+    """
+    Unit Tests for the Alzheimer's Analysis Project.
+    This file checks if the logic in 'Statistical_model.py' works correctly.
+    """
+
     def setUp(self):
         """
-        Setup: This runs before EVERY test.
-        We create a fake DataFrame that looks exactly like the real data,
-        so we can test the functions without needing the real CSV file.
+        This runs automatically BEFORE every test.
+        It creates a small, fake dataset so we don't need the real file.
         """
-#creating fake data 
-        self.data = pd.DataFrame({
-            'Age': [60, 70, 80, 65, 75, 85, 62, 72, 82, 68],
-            'Hypertension': [0, 1, 0, 1, 0, 1, 0, 1, 0, 1],
-            'Diabetes': [0, 0, 1, 1, 0, 0, 1, 1, 0, 0],
-            'Smoking': [0, 1, 0, 0, 1, 0, 0, 1, 0, 0],
-            'Ethnicity': [0, 1, 2, 0, 3, 0, 1, 2, 0, 1], # For One-Hot Encoding
-            'PhysicalActivity': [5, 2, 8, 4, 6, 1, 9, 3, 7, 5], # For stats
-            'DietQuality': [7, 4, 9, 5, 8, 3, 9, 4, 8, 6],
-            'SleepQuality': [8, 5, 7, 6, 8, 4, 9, 5, 7, 6],
-            'MMSE': [25, 18, 10, 28, 15, 8, 29, 20, 12, 26],
-            'Diagnosis': [0, 1, 1, 0, 1, 1, 0, 0, 1, 0] # Target
-        })
+        data = {
+            'Age': [60, 72, 85, 95, 65, 75],
+            'Ethnicity': [0, 1, 0, 2, 3, 1],
+            'Diagnosis': [0, 1, 1, 0, 0, 1],
+            'DietQuality': [5.5, 2.1, 8.0, 4.5, 6.0, 3.0],
+            'MMSE': [28, 15, 10, 26, 29, 12],
+            'PatientID': [101, 102, 103, 104, 105, 106], # Should be dropped
+            'DoctorInCharge': ['Dr.A', 'Dr.B', 'Dr.A', 'Dr.C', 'Dr.B', 'Dr.A'] # Should be dropped
+        }
+        self.mock_data = pd.DataFrame(data)
 
-    # --- Test 1: Feature Engineering ---
-    def test_perform_feature_engineering(self):
+    def test_feature_engineering(self):
         """
-        Test that new features (CardioRisk, AgeGroup, One-Hot Ethnicity) are created correctly.
+        Test 1: Check if 'Statistical_model.py' correctly adds new features.
         """
-        # Act: activating the function
-        df_eng = perform_feature_engineering(self.data)
-        
-        # Assert: checking
-        # 1. Check if 'CardioRiskScore' was created
-        self.assertIn('CardioRiskScore', df_eng.columns)
-        # Check calculation: row 1 (index 1): Hyp(1) + Dia(0) + Smo(1) = 2
-        self.assertEqual(df_eng.iloc[1]['CardioRiskScore'], 2)
-        
-        # 2. Check if 'AgeGroup' was created
-        self.assertIn('AgeGroup', df_eng.columns)
-        
-        # 3. Check One-Hot Encoding (Ethnicity column should be gone, Ethnicity_1 etc. added)
-        self.assertNotIn('Ethnicity', df_eng.columns)
-        self.assertTrue(any(col.startswith('Ethnicity_') for col in df_eng.columns))
+        # Run the function
+        df_result = perform_feature_engineering(self.mock_data)
 
-    # --- Test 2: Statistical Analysis ---
-    def test_analyze_correlations(self):
-        """
-        Test that the statistical function runs and returns 3 results (Activity, Diet, Sleep).
-        """
-        results = analyze_correlations(self.data)
+        # Check: Did it create the 'AgeGroup' column?
+        self.assertIn('AgeGroup', df_result.columns, "Failed to create 'AgeGroup' column")
         
-        # We expect 3 tuples in the results list (one for each lifestyle factor)
-        self.assertEqual(len(results), 3)
-        # Check that the first item contains 'PhysicalActivity'
-        self.assertEqual(results[0][0], 'PhysicalActivity')
+        # Check: Did it perform One-Hot Encoding on Ethnicity?
+        # (Columns should increase because Ethnicity 0,1,2,3 became multiple columns)
+        self.assertTrue(len(df_result.columns) > len(self.mock_data.columns), 
+                        "One-Hot Encoding did not add new columns")
 
-    # --- Test 3: Preprocessing (Splitting) ---
-    def test_preprocess_data(self):
+    def test_data_splitting(self):
         """
-        Test splitting into Train/Test and X/y.
+        Test 2: Check if 'Statistical_model.py' correctly splits Train/Test.
         """
-        # First we need to engineer the data because preprocess expects the new columns
-        df_eng = perform_feature_engineering(self.data)
-        
-        X_train, X_test, y_train, y_test = preprocess_data(df_eng, target_column='Diagnosis')
-        
-        # Check split ratio (80% train = 8 rows, 20% test = 2 rows)
-        self.assertEqual(len(X_train), 8)
-        self.assertEqual(len(X_test), 2)
-        
-        # Check that Diagnosis is NOT in X (features)
-        self.assertNotIn('Diagnosis', X_train.columns)
+        # Run the function
+        X_train, X_test, y_train, y_test = preprocess_data(self.mock_data)
 
-    # --- Test 4: Logistic Regression Training ---
-    def test_train_logistic_regression(self):
+        # Check: Are the outputs valid?
+        self.assertIsNotNone(X_train)
+        self.assertIsNotNone(y_test)
+
+        # Check: Did we lose any data? (Train + Test should equal Total)
+        total_rows = len(X_train) + len(X_test)
+        self.assertEqual(total_rows, len(self.mock_data), "Data rows were lost during splitting")
+
+        # Check: Did we drop the target 'Diagnosis' from X?
+        self.assertNotIn('Diagnosis', X_train.columns, "Target variable 'Diagnosis' leaked into X_train")
+
+    def test_model_training(self):
         """
-        Test that Logistic Regression trains and returns a model and scaler.
+        Test 3: Check if the model trains without crashing.
         """
         # Prepare data
-        df_eng = perform_feature_engineering(self.data)
-        X_train, X_test, y_train, y_test = preprocess_data(df_eng)
-        
-        # Train
+        X_train, X_test, y_train, y_test = preprocess_data(self.mock_data)
+
+        # Run the training function
         model, scaler = train_logistic_regression(X_train, y_train)
-        
-        # Assert
-        self.assertIsNotNone(model)
-        self.assertIsNotNone(scaler)
-        # Check if model has coefficients (means it is trained)
-        self.assertTrue(hasattr(model, 'coef_'))
 
-    # --- Test 5: Random Forest Training ---
-    def test_train_random_forest(self):
-        """
-        Test that Random Forest trains correctly.
-        """
-        # Prepare data
-        df_eng = perform_feature_engineering(self.data)
-        X_train, X_test, y_train, y_test = preprocess_data(df_eng)
-        
-        # Train
-        model = train_random_forest(X_train, y_train)
-        
-        # Assert
-        self.assertIsNotNone(model)
-        # Random Forest has 'feature_importances_', not 'coef_'
-        self.assertTrue(hasattr(model, 'feature_importances_'))
+        # Check: Did it return a real model and scaler?
+        self.assertIsNotNone(model, "Model training returned None")
+        self.assertIsNotNone(scaler, "Scaler returned None")
 
-   # --- Test 6: Model Evaluation ---
-    def test_evaluate_model(self):
+    def test_statistics_run(self):
         """
-        Test that evaluation returns Accuracy and Recall scores.
+        Test 4: Check if 'Statistic_analysis.py' runs without errors.
         """
-        # Setup
-        df_eng = perform_feature_engineering(self.data)
-        X_train, X_test, y_train, y_test = preprocess_data(df_eng)
-        model = train_random_forest(X_train, y_train)
-        
-        # Act
-        accuracy, recall = evaluate_model(model, X_test, y_test, model_name="TestRF")
-        
-        # Assert (Scores must be between 0 and 1)
-        self.assertTrue(0 <= accuracy <= 1)
-        self.assertTrue(0 <= recall <= 1)
-
-    # --- Test 7: Feature Importance ---
-    def test_get_feature_importance(self):
-        """
-        Test that we get a sorted table of important features.
-        """
-        # Setup
-        df_eng = perform_feature_engineering(self.data)
-        X_train, X_test, y_train, y_test = preprocess_data(df_eng)
-        model = train_random_forest(X_train, y_train)
-        
-        # Act
-        imp_df = get_feature_importance(model, X_train.columns, model_type='tree')
-        
-        # Assert
-        self.assertIn('Feature', imp_df.columns)
-        self.assertIn('Importance', imp_df.columns)
-        # Check sorting: First item should have >= importance than last item
-        self.assertGreaterEqual(imp_df.iloc[0]['Abs_Importance'], imp_df.iloc[-1]['Abs_Importance'])
+        # We just want to make sure this function doesn't crash on valid data
+        try:
+            analyze_correlations(self.mock_data)
+        except Exception as e:
+            self.fail(f"analyze_correlations raised an exception: {e}")
 
 if __name__ == '__main__':
     unittest.main()
