@@ -1,7 +1,7 @@
 import sys
 import pandas as pd
 import numpy as np
-
+from sklearn.metrics import accuracy_score, confusion_matrix
 # --- IMPORT BLOCK ---
 # We use a try-except block to safely import our custom modules.
 # If a file is missing or has an error, the code will stop here and tell us why.
@@ -25,7 +25,7 @@ try:
         perform_feature_engineering,
         preprocess_data,
         train_logistic_regression,
-        train_random_forest
+        train_random_forest,
     )
     
 except ImportError as e:
@@ -36,9 +36,12 @@ def evaluate_model(model, X_test, y_test, scaler, model_name):
     """
     Helper function to evaluate a trained model.
     It calculates accuracy and calls the plot_confusion_matrix function.
-    """
-    from sklearn.metrics import accuracy_score, confusion_matrix
-    
+    """    
+    # Safety Check: If model training failed (returned None), skip evaluation to avoid crash.
+    if model is None:
+        print(f"Warning: {model_name} is None. Skipping evaluation.")
+        return
+
     # Scaling Logic:
     # If the model used a scaler (like Logistic Regression), we must scale the test data too.
     # If not (like Random Forest), we use the data as is.
@@ -62,7 +65,7 @@ def evaluate_model(model, X_test, y_test, scaler, model_name):
 
 # --- MAIN EXECUTION BLOCK ---
 if __name__ == "__main__":
-    print("🚀 Starting Alzheimer's Analysis System...")
+    print(" Starting Alzheimer's Analysis System...")
 
     # Step 1: Load the Data
     # We check if 'df_cleaned' is already available (from import) or needs to be loaded.
@@ -86,6 +89,9 @@ if __name__ == "__main__":
         print("Performing Feature Engineering...")
         df = perform_feature_engineering(df)
         
+        # Remove rows with NaN values to prevent model crashes
+        df = df.dropna()
+
         # Step 3: Statistical Analysis (P-Value check)
         analyze_correlations(df)
 
@@ -108,7 +114,8 @@ if __name__ == "__main__":
 
         # Step 7: Final Insights
         print("\n--- Generating Feature Importance Insights ---")
-        plot_feature_importance(rf_model, feature_names)
+        if rf_model is not None:
+            plot_feature_importance(rf_model, feature_names)
 
         print("\n Analysis Complete.")
         
