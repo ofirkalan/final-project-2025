@@ -1,7 +1,11 @@
 import matplotlib.pyplot as plt
 import seaborn as sns
 import pandas as pd
-import numpy as np  
+import numpy as np
+import logging
+
+# Configure logger for this module
+logger = logging.getLogger(__name__)
 
 def plot_general_correlation_matrix(df):
     """
@@ -9,7 +13,7 @@ def plot_general_correlation_matrix(df):
     This helps us understand the raw data before we process it.
     """
     try:
-        print("   [Plotting] Generating General Correlation Matrix (Raw Data)...")
+        logger.info("Generating General Correlation Matrix (Raw Data)...")
         
         # Open a new figure window with a specific size (width=12, height=10)
         plt.figure(figsize=(12, 10))
@@ -25,9 +29,12 @@ def plot_general_correlation_matrix(df):
         
         plt.title("Correlation Matrix (All Variables)")
         plt.show() # Display the graph
+        
+        logger.info("General Correlation Matrix displayed successfully.")
 
     except Exception as e:
-        print(f"   [Error] Could not plot General Correlation Matrix: {e}")
+        logger.error(f"Could not plot General Correlation Matrix: {e}")
+        raise RuntimeError(f"[Error] Could not plot General Correlation Matrix: {e}") from e
 
 def plot_confusion_matrix(cm, model_name):
     """
@@ -36,7 +43,7 @@ def plot_confusion_matrix(cm, model_name):
     vs how many were mistakes (False Positives/Negatives).
     """
     try:
-        print(f"   [Plotting] Generating Confusion Matrix for {model_name}...")
+        logger.info(f"Generating Confusion Matrix for {model_name}...")
         plt.figure(figsize=(8, 6))
         
         # annot=True: Writes the actual numbers inside the squares.
@@ -49,8 +56,11 @@ def plot_confusion_matrix(cm, model_name):
         plt.ylabel('True Label (What is actually true)')
         plt.show()
         
+        logger.info(f"Confusion Matrix for {model_name} displayed successfully.")
+        
     except Exception as e:
-        print(f"   [Error] Could not plot Confusion Matrix: {e}")
+        logger.error(f"Could not plot Confusion Matrix: {e}")
+        raise RuntimeError(f"[Error] Could not plot Confusion Matrix: {e}") from e
 
 def plot_feature_importance(model, feature_names):
     """
@@ -58,12 +68,12 @@ def plot_feature_importance(model, feature_names):
     for the Random Forest model to make its decision.
     """
     try:
-        print("   [Plotting] Generating Feature Importance Graph...")
+        logger.info("Generating Feature Importance Graph...")
         
         # Safety Check: Ensure the model actually has importance data.
         # (Logistic Regression, for example, does not have 'feature_importances_').
         if not hasattr(model, 'feature_importances_'):
-            print("Model does not support feature importance.")
+            logger.warning("Model does not support feature importance. Skipping plot.")
             return
 
         # Extract the importance numbers from the trained model
@@ -85,6 +95,9 @@ def plot_feature_importance(model, feature_names):
         plt.xlabel('Importance Score')
         plt.ylabel('Features')
         plt.show()
+        
+        logger.info("Feature Importance Graph displayed successfully.")
 
     except Exception as e:
-        print(f"   [Error] Could not plot Feature Importance: {e}")
+        logger.error(f"Could not plot Feature Importance: {e}")
+        raise RuntimeError(f"[Error] Could not plot Feature Importance: {e}") from e
