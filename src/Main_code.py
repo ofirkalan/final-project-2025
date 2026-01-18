@@ -1,11 +1,10 @@
 import sys
 import pandas as pd
 import numpy as np
-import logging  # Imported logging module
-from sklearn.metrics import accuracy_score, confusion_matrix
+import logging
+from sklearn.metrics import accuracy_score, confusion_matrix, recall_score
 
 # --- LOGGING SETUP ---
-# Configuring the logger to show the time, level (INFO/ERROR), and message.
 logging.basicConfig(
     level=logging.INFO,
     format='%(asctime)s - %(levelname)s - %(message)s',
@@ -13,24 +12,14 @@ logging.basicConfig(
 )
 
 # --- IMPORT BLOCK ---
-# We use a try-except block to safely import our custom modules.
-# If a file is missing or has an error, the code will stop here and tell us why.
 try:
-    # 1. Load Data Module
     from Text_read import load_data, df_cleaned
-    
-    # 2. Statistics Module
     from Statistic_analysis import analyze_correlations
-    
-    # 3. Visualization Module
-    # We import ALL 3 plotting functions here.
     from Main_plots import (
         plot_confusion_matrix, 
         plot_feature_importance, 
         plot_general_correlation_matrix
     )
-    
-    # 4. Modeling Module (Preprocessing & Training)
     from Statistical_model import (
         perform_feature_engineering,
         preprocess_data,
@@ -39,49 +28,49 @@ try:
     )
     
 except ImportError as e:
-    # Using critical for errors that stop the program
     logging.critical(f"CRITICAL ERROR: Missing modules. Details: {e}")
-    sys.exit(1) # Stop the program immediately
+    sys.exit(1)
 
 def evaluate_model(model, X_test, y_test, scaler, model_name):
     """
     Helper function to evaluate a trained model.
-    It calculates accuracy and calls the plot_confusion_matrix function.
+    Calculates Accuracy AND Recall, then plots confusion matrix.
     """    
-    # Safety Check: If model training failed (returned None), skip evaluation to avoid crash.
     if model is None:
-        # Using warning for non-critical issues
         logging.warning(f"Warning: {model_name} is None. Skipping evaluation.")
         return
 
-    # Scaling Logic:
-    # If the model used a scaler (like Logistic Regression), we must scale the test data too.
-    # If not (like Random Forest), we use the data as is.
     if scaler:
         X_test_input = scaler.transform(X_test)
     else:
         X_test_input = X_test
 
-    # Generate predictions using the model
+    # Generate predictions
     y_pred = model.predict(X_test_input)
     
     # Calculate metrics
     acc = accuracy_score(y_test, y_pred)
+    recall = recall_score(y_test, y_pred)
     cm = confusion_matrix(y_test, y_pred)
     
-    # Using logging.info for standard outputs
+    # Log results
     logging.info(f"--- {model_name} Performance ---")
     logging.info(f"Accuracy: {acc:.4f}")
+    logging.info(f"Recall:   {recall:.4f}")
     
-    # Call the plotting function from Main_plots.py
+    # Check if Recall meets the success criteria (> 80%)
+    if recall < 0.80:
+        logging.warning(f"(!) Recall is below 0.80. Consider tuning class_weight or threshold.")
+    else:
+        logging.info(f"(v) Recall meets the success criteria (>0.80).")
+
+    # Plotting
     plot_confusion_matrix(cm, model_name)
 
 # --- MAIN EXECUTION BLOCK ---
 if __name__ == "__main__":
     logging.info("Starting Alzheimer's Analysis System...")
 
-    # Step 1: Load the Data
-    # We check if 'df_cleaned' is already available (from import) or needs to be loaded.
     try:
         if 'df_cleaned' in globals() and df_cleaned is not None:
             df = df_cleaned
@@ -92,47 +81,42 @@ if __name__ == "__main__":
     except NameError:
         df = load_data()
 
-    # Only proceed if data was loaded successfully
     if df is not None:
-        
-        # --- NEW STEP: Visualizing Raw Data ---
-        # We plot the general correlation matrix BEFORE making any changes to the data.
-        # This gives us an initial look at the relationships.
         logging.info("Generating general correlation matrix...")
         plot_general_correlation_matrix(df)
 
-        # Step 2: Feature Engineering
         logging.info("Performing Feature Engineering...")
         df = perform_feature_engineering(df)
         
-        # Remove rows with NaN values to prevent model crashes
+        # --- Verification Check ---
+        if 'CardioRiskScore' in df.columns:
+            logging.info("✅ 'CardioRiskScore' created successfully!")
+            logging.info(f"Sample values (First 5): {df['CardioRiskScore'].head().tolist()}")
+        else:
+            logging.warning("⚠️ 'CardioRiskScore' was NOT created.")
+        # --------------------------
+
         original_len = len(df)
         df = df.dropna()
         if len(df) < original_len:
              logging.info(f"Dropped {original_len - len(df)} rows containing NaN values.")
 
-        # Step 3: Statistical Analysis (P-Value check)
         logging.info("Running statistical analysis...")
         analyze_correlations(df)
 
-        # Step 4: Split Data into Train and Test sets
         logging.info("Splitting Data into Train/Test sets...")
         X_train, X_test, y_train, y_test = preprocess_data(df)
         
-        # We save the column names now, to use them later in the Feature Importance graph
         feature_names = X_train.columns
 
-        # Step 5: Train & Evaluate Logistic Regression
         logging.info("Training Logistic Regression model...")
         lr_model, scaler = train_logistic_regression(X_train, y_train)
         evaluate_model(lr_model, X_test, y_test, scaler, "Logistic Regression")
 
-        # Step 6: Train & Evaluate Random Forest
         logging.info("Training Random Forest model...")
         rf_model = train_random_forest(X_train, y_train)
         evaluate_model(rf_model, X_test, y_test, None, "Random Forest")
 
-        # Step 7: Final Insights
         logging.info("Generating Feature Importance Insights...")
         if rf_model is not None:
             plot_feature_importance(rf_model, feature_names)
