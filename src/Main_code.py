@@ -2,7 +2,6 @@ import sys
 import pandas as pd
 import numpy as np
 import logging  # Imported logging module
-from sklearn.metrics import accuracy_score, confusion_matrix
 
 # --- LOGGING SETUP ---
 # Configuring the logger to show the time, level (INFO/ERROR), and message.
@@ -31,50 +30,19 @@ try:
     )
     
     # 4. Modeling Module (Preprocessing & Training)
+    # Added evaluate_model to the import list
     from Statistical_model import (
         perform_feature_engineering,
         preprocess_data,
         train_logistic_regression,
         train_random_forest,
+        evaluate_model 
     )
     
 except ImportError as e:
     # Using critical for errors that stop the program
     logging.critical(f"CRITICAL ERROR: Missing modules. Details: {e}")
     sys.exit(1) # Stop the program immediately
-
-def evaluate_model(model, X_test, y_test, scaler, model_name):
-    """
-    Helper function to evaluate a trained model.
-    It calculates accuracy and calls the plot_confusion_matrix function.
-    """    
-    # Safety Check: If model training failed (returned None), skip evaluation to avoid crash.
-    if model is None:
-        # Using warning for non-critical issues
-        logging.warning(f"Warning: {model_name} is None. Skipping evaluation.")
-        return
-
-    # Scaling Logic:
-    # If the model used a scaler (like Logistic Regression), we must scale the test data too.
-    # If not (like Random Forest), we use the data as is.
-    if scaler:
-        X_test_input = scaler.transform(X_test)
-    else:
-        X_test_input = X_test
-
-    # Generate predictions using the model
-    y_pred = model.predict(X_test_input)
-    
-    # Calculate metrics
-    acc = accuracy_score(y_test, y_pred)
-    cm = confusion_matrix(y_test, y_pred)
-    
-    # Using logging.info for standard outputs
-    logging.info(f"--- {model_name} Performance ---")
-    logging.info(f"Accuracy: {acc:.4f}")
-    
-    # Call the plotting function from Main_plots.py
-    plot_confusion_matrix(cm, model_name)
 
 # --- MAIN EXECUTION BLOCK ---
 if __name__ == "__main__":
