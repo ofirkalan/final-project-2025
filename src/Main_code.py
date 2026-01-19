@@ -12,8 +12,6 @@ logging.basicConfig(
 )
 
 # --- IMPORT BLOCK ---
-# We use a try-except block to safely import our custom modules.
-# If a file is missing or has an error, the code will stop here and tell us why.
 try:
     # 1. Load Data Module
     from Text_read import load_data, df_cleaned
@@ -22,7 +20,6 @@ try:
     from Statistic_analysis import analyze_correlations
     
     # 3. Visualization Module
-    # We import ALL 3 plotting functions here.
     from Main_plots import (
         plot_confusion_matrix, 
         plot_feature_importance, 
@@ -30,7 +27,6 @@ try:
     )
     
     # 4. Modeling Module (Preprocessing & Training)
-    # Added evaluate_model to the import list
     from Statistical_model import (
         perform_feature_engineering,
         preprocess_data,
@@ -40,7 +36,6 @@ try:
     )
     
 except ImportError as e:
-    # Using critical for errors that stop the program
     logging.critical(f"CRITICAL ERROR: Missing modules. Details: {e}")
     sys.exit(1) # Stop the program immediately
 
@@ -49,7 +44,6 @@ if __name__ == "__main__":
     logging.info("Starting Alzheimer's Analysis System...")
 
     # Step 1: Load the Data
-    # We check if 'df_cleaned' is already available (from import) or needs to be loaded.
     try:
         if 'df_cleaned' in globals() and df_cleaned is not None:
             df = df_cleaned
@@ -64,8 +58,6 @@ if __name__ == "__main__":
     if df is not None:
         
         # --- NEW STEP: Visualizing Raw Data ---
-        # We plot the general correlation matrix BEFORE making any changes to the data.
-        # This gives us an initial look at the relationships.
         logging.info("Generating general correlation matrix...")
         plot_general_correlation_matrix(df)
 
@@ -87,7 +79,6 @@ if __name__ == "__main__":
         logging.info("Splitting Data into Train/Test sets...")
         X_train, X_test, y_train, y_test = preprocess_data(df)
         
-        # We save the column names now, to use them later in the Feature Importance graph
         feature_names = X_train.columns
 
         # Step 5: Train & Evaluate Logistic Regression
