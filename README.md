@@ -109,13 +109,13 @@ Bash
 pip install -r requirements.txt
 Run the Analysis: Execute the main script from the src folder:
 
-## Bash
+**Bash**
 
 python src/Main_code.py
 
 Run Tests: To verify the statistical components:
 
-## Bash
+**Bash**
 
 python src/Test_analysis.py
 ## 7. References
