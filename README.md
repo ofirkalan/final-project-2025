@@ -36,8 +36,9 @@ final-project-2025/
 ├── logs/                           # Automated runtime logs (created upon execution)
 ├── requirements.txt                # List of dependencies
 └── README.md                       # Project documentation
+```
 
-3. Key Stages & Workflow
+## 3. Key Stages & Workflow
 The project follows a structured data analysis pipeline (Data Import → Processing → Analysis → Modeling → Visualization):
 
 Data Import:
@@ -70,7 +71,7 @@ Generating Confusion Matrices to evaluate accuracy.
 
 Plotting Feature Importance to interpret the Random Forest's decision-making logic.
 
-4. Key Configurations & Parameters
+## 4. Key Configurations & Parameters
 The following parameters are critical for the model's performance and reproducibility:
 
 random_state = 42: Ensures that data splitting and model initialization are reproducible across different runs.
@@ -83,7 +84,7 @@ n_estimators = 100: The number of trees in the Random Forest.
 
 Age Bins [60, 70, 80, 90, 100]: Defined to align with standard geriatric risk groups.
 
-5. Dataset Description
+## 5. Dataset Description
 Source: Included in the src folder (alzheimers_disease_data.csv).
 
 Description: The dataset consists of anonymized patient health records used for classification tasks.
@@ -98,7 +99,7 @@ Ethnicity: Categorical demographic data.
 
 Medical History: Various clinical indicators.
 
-6. How to Run (Instructions)
+## 6. How to Run (Instructions)
 To run this project on your local machine, follow these steps:
 
 Install Dependencies: Make sure you are in the project root folder and run:
@@ -116,9 +117,9 @@ Run Tests: To verify the statistical components:
 Bash
 
 python src/Test_analysis.py
-7. References
+## 7. References
 Scikit-Learn Documentation: https://scikit-learn.org/stable/
 
 Pandas Documentation: https://pandas.pydata.org/docs/
 
-Alzheimer's Association: Research into age-related risk factors for dementia.
+Alzheimer's Association: Kaggle Alzheimer's Dataset
