@@ -104,7 +104,7 @@ To run this project on your local machine, follow these steps:
 
 Install Dependencies: Make sure you are in the project root folder and run:
 
-Bash
+**Bash**
 
 pip install -r requirements.txt
 Run the Analysis: Execute the main script from the src folder:
